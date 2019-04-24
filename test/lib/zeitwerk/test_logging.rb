@@ -60,12 +60,31 @@ class TestLogging < LoaderTest
     files = [["x.rb", "X = true"]]
     with_files(files) do
       with_load_path(".") do
-        assert_logged(/constant X loaded from file #{File.realpath("x.rb")}/) do
+        x_rb = Regexp.escape(File.realpath("x.rb"))
+        assert_logged(/constant X loaded from file #{x_rb}/) do
           loader.push_dir(".")
           loader.setup
 
           assert X
         end
+      end
+    end
+  end
+
+  test "missing constants" do
+    on_teardown do
+      remove_const :X # should be unnecessary, but $LOADED_FEATURES.reject! redefines it
+      remove_const :Y
+    end
+
+    files = [["x.rb", "Y = 1"]]
+    with_files(files) do
+      x_rb = Regexp.escape(File.realpath("x.rb"))
+      assert_logged(/expected file #{x_rb} to define constant X, but didn't/) do
+        loader.push_dir(".")
+        loader.setup
+
+        assert_raises(NameError) { X }
       end
     end
   end

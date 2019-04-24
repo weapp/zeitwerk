@@ -6,9 +6,17 @@ module Zeitwerk::Loader::Callbacks
   # @return [void]
   def on_file_autoloaded(file)
     cref = autoloads.delete(file)
+
     to_unload[cpath(*cref)] = [file, cref] if reloading_enabled?
     Zeitwerk::Registry.unregister_autoload(file)
-    log("constant #{cpath(*cref)} loaded from file #{file}") if logger
+
+    if logger
+      if cdef?(*cref)
+        log("constant #{cpath(*cref)} loaded from file #{file}")
+      else
+        log("expected file #{file} to define constant #{cpath(*cref)}, but didn't")
+      end
+    end
   end
 
   # Invoked from our decorated Kernel#require when a managed directory is
