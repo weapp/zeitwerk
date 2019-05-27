@@ -59,7 +59,7 @@ module Zeitwerk
     @tracer = TracePoint.new(:class) do |event|
       # If the class is a singleton class, we won't do anything with it so we can bail out immediately.
       # This is several orders of magnitude faster than accessing `Module#name`.
-      next if event.self.singleton_class?
+      next if event.self.send(:singleton_class?)
 
       # Note that it makes sense to compute the hash code unconditionally,
       # because the trace point is disabled if cpaths is empty.
